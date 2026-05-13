@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}AI Asistan | KOBİ Asistan{% endblock %}
+{% block page_name %}AI Asistan{% endblock %}
+
+{% block content %}
+
+<style>
+    .chat-body {
+        height: 700px; /* Chat alanının boyunu burada sabitledik */
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto; /* Taşma olduğunda scroll çıkmasını sağlar */
+        scroll-behavior: smooth;
+    }
+</style>
+
+<section class="assistant-layout">
+
+    <div class="assistant-info-card">
+        <div class="assistant-avatar-large">🤖</div>
+
+        <h2>KOBİ AI Asistanı</h2>
+        <p>
+            Stok durumunu yorumlayabilir, ürün açıklaması yazabilir,
+            müşteri mesajlarını düzenleyebilir ve satış stratejisi önerebilir.
+        </p>
+
+        <div class="assistant-suggestions">
+            <span>Örnek sorular</span>
+
+            <div class="suggestion-card">
+                Kritik stoktaki ürünleri yorumla.
+            </div>
+
+            <div class="suggestion-card">
+                Domates ürünü için etkileyici açıklama yaz.
+            </div>
+
+            <div class="suggestion-card">
+                Satışları artırmak için kampanya öner.
+            </div>
+        </div>
+    </div>
+
+    <div class="chat-window" style="display: flex; flex-direction: column; height: 850px; background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
+
+        <div class="chat-header" style="display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid #eee;">
+            <div class="chat-user" style="display: flex; align-items: center; gap: 15px;">
+                <div class="chat-avatar" style="width: 45px; height: 45px; background: #6366f1; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">AI</div>
+                <div>
+                    <h2 style="margin: 0; font-size: 18px;">KOBİ Asistan</h2>
+                    <p style="margin: 0; font-size: 13px; color: #666;">Gemini destekli işletme yardımcısı</p>
+                </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <a href="/assistant/clear" 
+                   onclick="return confirm('Tüm sohbet geçmişi silinecek. Emin misin?')"
+                   style="color: #ef4444; text-decoration: none; font-size: 13px; font-weight: 600; background: #fee2e2; padding: 6px 12px; border-radius: 8px; transition: 0.3s;">
+                   🗑️ Sohbeti Temizle
+                </a>
+
+                <div class="online-badge" style="display: flex; align-items: center; gap: 5px; font-size: 13px; color: #10b981; font-weight: 600;">
+                    <span style="width: 8px; height: 8px; background: #10b981; border-radius: 50%;"></span>
+                    Çevrimiçi
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-body" style="flex: 1; padding: 25px; overflow-y: auto; background-color: #f8fafc;">
+            <div class="message-row bot">
+                <div class="message-bubble" style="background: white; padding: 15px; border-radius: 15px; max-width: 80%; box-shadow: 0 2px 5px rgba(0,0,0,0.02); margin-bottom: 20px;">
+                    <p style="margin: 0;">Merhaba 👋 Ben KOBİ asistanın. Bana ürün, stok, müşteri, sipariş veya satış stratejisi hakkında soru sorabilirsin.</p>
+                    <small style="color: #999; display: block; margin-top: 5px;">AI Asistan</small>
+                </div>
+            </div>
+
+            {% if chat_history %}
+                {% for chat in chat_history %}
+                    {% if chat.role == 'user' %}
+                        <div class="message-row user" style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
+                            <div class="message-bubble" style="background: #6366f1; color: white; padding: 15px; border-radius: 15px; max-width: 80%;">
+                                <p style="margin: 0;">{{ chat.content }}</p>
+                                <small style="opacity: 0.8; display: block; margin-top: 5px; text-align: right;">Sen</small>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="message-row bot" style="display: flex; justify-content: flex-start; margin-bottom: 20px;">
+                            <div class="message-bubble" style="background: white; padding: 15px; border-radius: 15px; max-width: 80%; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                                <p style="margin: 0;">{{ chat.content }}</p>
+                                <small style="color: #999; display: block; margin-top: 5px;">AI Asistan</small>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        <form action="/assistant" method="post" class="chat-input-area" style="padding: 20px; background: white; border-top: 1px solid #eee; display: flex; gap: 15px; align-items: center;">
+            <textarea 
+                name="soru" 
+                placeholder="Mesaj yaz... Örn: Kritik stoktaki ürünleri yorumla"
+                required
+                style="flex: 1; border: 1px solid #ddd; border-radius: 10px; padding: 12px; height: 50px; resize: none; outline: none; font-family: inherit;"
+            ></textarea>
+
+            <button type="submit" class="send-button" style="background: #22c55e; color: white; border: none; padding: 0 25px; height: 50px; border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s;">
+                Gönder <span>➜</span>
+            </button>
+        </form>
+
+    </div>
+
+</section>
+
+<script>
+    window.onload = function() {
+        var chatBody = document.querySelector('.chat-body');
+        if (chatBody) {
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+    };
+</script>
+
+{% endblock %}

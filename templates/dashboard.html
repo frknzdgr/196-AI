@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | KOBİ Asistan{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h1>Yönetim Paneli</h1>
+        <p>İşletmenin ürün, stok, sipariş ve müşteri durumunu buradan takip edebilirsin.</p>
+    </div>
+
+    <form action="/seed" method="post">
+        <button class="btn-primary" type="submit">Örnek ürünleri yükle</button>
+    </form>
+</div>
+
+<div class="cards">
+    <div class="card">
+        <span>Toplam Ürün</span>
+        <strong>{{ toplam_urun }}</strong>
+    </div>
+
+    <div class="card">
+        <span>Toplam Sipariş</span>
+        <strong>{{ toplam_siparis }}</strong>
+    </div>
+
+    <div class="card">
+        <span>Toplam Müşteri</span>
+        <strong>{{ toplam_musteri }}</strong>
+    </div>
+
+    <div class="card warning">
+        <span>Kritik Stok</span>
+        <strong>{{ kritik_stok }}</strong>
+    </div>
+
+    <div class="card success">
+        <span>Toplam Ciro</span>
+        <strong>{{ toplam_ciro }} TL</strong>
+    </div>
+</div>
+
+<div class="grid-two">
+
+    <section class="panel">
+        <div class="panel-header">
+            <h2>Son Siparişler</h2>
+            <a href="/orders">Tümünü Gör</a>
+        </div>
+
+        {% if son_siparisler %}
+        <table>
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Ürünler</th>
+                    <th>Durum</th>
+                    <th>Tutar</th>
+                    <th>Tarih</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for siparis in son_siparisler %}
+                <tr>
+                    <td>#{{ siparis["id"] }}</td>
+                    <td>{{ siparis["urunler_listesi"] }}</td>
+                    <td><span class="status-badge status-{{ siparis['durum']|replace(' ', '-') }}">{{ siparis["durum"]
+                            }}</span></td>
+                    <td>{{ siparis["toplam_tutar"] }} TL</td>
+                    <td>{{ siparis["tarih"] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="empty">Henüz sipariş yok.</p>
+        {% endif %}
+    </section>
+
+    <section class="panel">
+        <div class="panel-header">
+            <h2>Kritik Stoktaki Ürünler</h2>
+            <a href="/products">Ürünlere Git</a>
+        </div>
+
+        {% if kritik_urunler %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Ürün</th>
+                    <th>Kategori</th>
+                    <th>Stok</th>
+                    <th>Fiyat</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for urun in kritik_urunler %}
+                <tr>
+                    <td>{{ urun["ad"] }}</td>
+                    <td>{{ urun["kategori"] }}</td>
+                    <td><span class="stock-low">{{ urun["stok"] }}</span></td>
+                    <td>{{ urun["fiyat"] }} TL</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="empty">Kritik stokta ürün yok.</p>
+        {% endif %}
+    </section>
+
+</div>
+
+{% endblock %}

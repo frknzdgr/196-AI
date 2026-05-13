@@ -1,14 +1,9 @@
-# API Anahtarları ve Gizli Bilgiler
 .env
 
-# Sanal Ortam
 venv/
 .venv/
 env/
 
-# Veritabanı (İçindeki verilerle gitmesin, herkes kendi db'sini oluştursun)
-isletme.db
 
-# Python Önbellek Dosyaları
 __pycache__/
 *.py[cod]

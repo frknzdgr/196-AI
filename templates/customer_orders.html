@@ -1,0 +1,104 @@
+{% extends "customer_base.html" %}
+{% block title %}Siparişlerim | KOBİ Market{% endblock %}
+
+{% block content %}
+<section class="store-hero slim">
+    <div>
+        <span class="eyebrow">Sipariş Merkezi</span>
+        <h1>Siparişlerim</h1>
+        <p>Mevcut siparişlerinin durumunu adım adım takip edebilirsin.</p>
+    </div>
+</section>
+
+{% if request.query_params.get('created') %}
+<div class="toast success-toast">✅ Siparişin oluşturuldu. Durumunu aşağıdan takip edebilirsin.</div>
+{% endif %}
+{% if request.query_params.get('error') %}
+<div class="toast error-toast">{{ request.query_params.get('error') }}</div>
+{% endif %}
+{% if request.query_params.get('cancelled') %}
+<div class="toast success-toast">✅ Siparişin iptal edildi.</div>
+{% endif %}
+
+<section class="store-section">
+    <div class="section-title-row">
+        <div>
+            <h2>Sipariş Durumu Takibi</h2>
+            <p>Her sipariş için süreç göstergesi. Hazırlanıyor durumunda olan siparişlerini iptal edebilirsin.</p>
+        </div>
+    </div>
+
+    {% if siparisler %}
+    <div class="order-card-grid">
+        {% for siparis in siparisler %}
+        <article class="order-status-card detailed">
+            <div class="order-card-head">
+                <div>
+                    <strong>Sipariş #{{ siparis["id"] }}</strong>
+                    <small>{{ siparis["tarih"] }}</small>
+                </div>
+                <span class="status-badge status-{{ siparis['durum']|replace(' ', '-') }}">{{ siparis["durum"] }}</span>
+            </div>
+
+            <div class="order-main-info">
+                <p>{{ siparis["urunler_listesi"] }}</p>
+                <b>{{ siparis["toplam_tutar"] }} TL</b>
+            </div>
+
+            <div class="delivery-address">📍 {{ siparis["teslimat_adresi"] }}</div>
+
+            <div class="tracker">
+                <div
+                    class="track-step {% if siparis['durum'] in ['Hazırlanıyor', 'Kargoya Verildi', 'Teslim Edildi'] %}done{% endif %}">
+                    <span></span><small>Hazırlanıyor</small>
+                </div>
+                <div
+                    class="track-step {% if siparis['durum'] in ['Kargoya Verildi', 'Teslim Edildi'] %}done{% endif %}">
+                    <span></span><small>Kargoda</small>
+                </div>
+                <div class="track-step {% if siparis['durum'] == 'Teslim Edildi' %}done{% endif %}">
+                    <span></span><small>Teslim</small>
+                </div>
+            </div>
+
+            {% if siparis['durum'] == 'Hazırlanıyor' %}
+            <div class="order-actions">
+                <button type="button" class="btn-secondary btn-small cancel-order-btn"
+                    data-order-id="{{ siparis['id'] }}">İptal Et</button>
+            </div>
+            {% endif %}
+
+            {% if siparis['durum'] == 'İptal Edildi' %}
+            <div class="cancelled-note">Bu sipariş iptal edildi.</div>
+            {% endif %}
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <strong>Henüz siparişin yok.</strong>
+        <p>Ürünler sayfasından sepetine ekleyip sipariş oluşturabilirsin.</p>
+    </div>
+    {% endif %}
+</section>
+
+<script>
+    document.querySelectorAll(".cancel-order-btn").forEach(button => {
+        button.addEventListener("click", () => {
+            if (confirm("Bu siparişi iptal etmek istediğine emin misin?")) {
+                const orderId = button.dataset.orderId;
+                const form = document.createElement("form");
+                form.method = "post";
+                form.action = "/customer/orders/cancel";
+                const input = document.createElement("input");
+                input.type = "hidden";
+                input.name = "order_id";
+                input.value = orderId;
+                form.appendChild(input);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    });
+</script>
+{% endblock %}

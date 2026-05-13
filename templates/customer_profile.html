@@ -1,0 +1,44 @@
+{% extends "customer_base.html" %}
+{% block title %}Profilim | KOBİ Market{% endblock %}
+
+{% block content %}
+<section class="store-hero slim">
+    <div>
+        <span class="eyebrow">Profil</span>
+        <h1>Hesap Bilgilerin</h1>
+        <p>Profilini güncelleyebilir, iletişim bilgilerini ve teslimat adresini kolayca değiştirebilirsin.</p>
+    </div>
+</section>
+
+{% if request.query_params.get('success') %}
+<div class="toast success-toast">Profil bilgilerin başarıyla kaydedildi.</div>
+{% endif %}
+{% if request.query_params.get('error') %}
+<div class="toast error-toast">{{ request.query_params.get('error') }}</div>
+{% endif %}
+
+<section class="store-section">
+    <div class="panel profile-panel">
+        <h2>Profil Bilgileri</h2>
+        <form action="/customer/profile" method="post" class="form-grid">
+            <label class="field-label" for="ad_soyad">Ad Soyad</label>
+            <input id="ad_soyad" name="ad_soyad" type="text" value="{{ customer['ad_soyad'] }}" required>
+
+            <label class="field-label" for="telefon">Telefon</label>
+            <input id="telefon" name="telefon" type="tel" value="{{ customer['telefon'] }}" required>
+
+            <label class="field-label" for="email">E-posta</label>
+            <input id="email" name="email" type="email" value="{{ customer['email'] or '' }}">
+
+            <label class="field-label" for="adres">Adres</label>
+            <textarea id="adres" name="adres" rows="4">{{ customer['adres'] or '' }}</textarea>
+
+            <label class="field-label" for="password">Yeni Parola</label>
+            <input id="password" name="password" type="password" placeholder="Yeni parola (isteğe bağlı)">
+
+            <div></div>
+            <button type="submit" class="btn-primary wide">Güncelle</button>
+        </form>
+    </div>
+</section>
+{% endblock %}

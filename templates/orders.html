@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block title %}Siparişler | KOBİ Asistan{% endblock %}
+{% block content %}
+
+{% if request.query_params.get('success') %}
+<div class="toast success-toast">✅ Sipariş başarıyla oluşturuldu.</div>
+{% endif %}
+{% if request.query_params.get('error') %}
+<div class="toast error-toast">{{ request.query_params.get('error') }}</div>
+{% endif %}
+
+<div class="page-header">
+    <div>
+        <h1>Sipariş Yönetimi</h1>
+        <p>Admin yeni sipariş oluşturabilir ve müşterilerin sipariş durumlarını güncelleyebilir.</p>
+    </div>
+</div>
+
+<section class="panel">
+    <h2>Sipariş Listesi</h2>
+    {% if siparisler %}
+    <table>
+        <thead>
+            <tr>
+                <th>No</th>
+                <th>Müşteri</th>
+                <th>Telefon</th>
+                <th>Ürünler</th>
+                <th>Durum</th>
+                <th>Ödeme Tipi</th>
+                <th>Tutar</th>
+                <th>Adres</th>
+                <th>Tarih</th>
+                <th>Güncelle</th>
+                <th>Sil</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for siparis in siparisler %}
+            <tr>
+                <form action="/orders/update" method="post">
+                    <td>#{{ siparis["id"] }}</td>
+                    <td>{{ siparis["ad_soyad"] or "Bilinmiyor" }}</td>
+                    <td>{{ siparis["telefon"] or "-" }}</td>
+                    <td class="cell-urunler">{{ siparis["urunler_listesi"] }}</td>
+                    <td>
+                        <select name="durum" class="select-durum"
+                            data-durum-value="{{ siparis['durum']|replace(' ', '-') }}">
+                            <option value="Hazırlanıyor" {% if siparis["durum"]=="Hazırlanıyor" %}selected{% endif %}>
+                                Hazırlanıyor</option>
+                            <option value="Kargoya Verildi" {% if siparis["durum"]=="Kargoya Verildi" %}selected{% endif
+                                %}>Kargoya Verildi</option>
+                            <option value="Teslim Edildi" {% if siparis["durum"]=="Teslim Edildi" %}selected{% endif %}>
+                                Teslim Edildi</option>
+                            <option value="İptal Edildi" {% if siparis["durum"]=="İptal Edildi" %}selected{% endif %}>
+                                İptal Edildi</option>
+                        </select>
+                    </td>
+                    <td>
+                        {% if siparis["odeme_tipi"] == "kapida" %}Kapıda Ödeme{% elif siparis["odeme_tipi"] ==
+                        "kredi_karti" %}Kredi Kartı{% else %}-{% endif %}
+                    </td>
+                    <td>{{ siparis["toplam_tutar"] }} TL</td>
+                    <td>{{ siparis["teslimat_adresi"] }}</td>
+                    <td>{{ siparis["tarih"] }}</td>
+                    <td>
+                        <input type="hidden" name="order_id" value="{{ siparis['id'] }}">
+                        <button class="btn-primary small" type="submit">Kaydet</button>
+                    </td>
+                </form>
+                <td>
+                    <form action="/orders/delete" method="post">
+                        <input type="hidden" name="order_id" value="{{ siparis['id'] }}">
+                        <button class="btn-danger small" type="submit">Sil</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty">Henüz sipariş yok.</p>
+    {% endif %}
+</section>
+
+<section class="panel">
+    <h2>Admin Olarak Sipariş Ekle</h2>
+    <form class="form-grid" action="/orders/add" method="post">
+        <select name="musteri_id">
+            <option value="">Kayıtlı müşteri seç veya yeni müşteri yaz</option>
+            {% for musteri in musteriler %}
+            <option value="{{ musteri['id'] }}">{{ musteri["ad_soyad"] }} - {{ musteri["telefon"] }}</option>
+            {% endfor %}
+        </select>
+        <input type="text" name="yeni_musteri_ad_soyad" placeholder="Yeni müşteri ad soyad">
+        <input type="text" name="yeni_musteri_telefon" placeholder="Yeni müşteri telefon">
+        <input type="text" name="yeni_musteri_adres" placeholder="Yeni müşteri adresi">
+
+        <select name="urun_id" required>
+            <option value="">Ürün seç</option>
+            {% for urun in urunler %}
+            <option value="{{ urun['id'] }}">{{ urun["ad"] }} - {{ urun["fiyat"] }} TL / Stok: {{ urun["stok"] }}
+            </option>
+            {% endfor %}
+        </select>
+        <input type="number" name="adet" min="1" value="1" required>
+        <select name="odeme_tipi" required>
+            <option value="kapida">Kapıda Ödeme</option>
+            <option value="kredi_karti">Kredi Kartı</option>
+        </select>
+        <input class="wide" type="text" name="teslimat_adresi"
+            placeholder="Teslimat adresi. Boş bırakırsan müşteri adresi kullanılır.">
+        <button class="btn-primary" type="submit">Sipariş Ekle</button>
+    </form>
+</section>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const selects = document.querySelectorAll('.select-durum');
+
+        const colorMap = {
+            'Hazırlanıyor': { bg: '#fef3c7', color: '#92400e' },
+            'Kargoya Verildi': { bg: '#fed7aa', color: '#9a3412' },
+            'Teslim Edildi': { bg: '#ecfdf5', color: '#0f766e' },
+            'İptal Edildi': { bg: '#fee2e2', color: '#991b1c' }
+        };
+
+        function updateSelectColor(selectElement) {
+            const value = selectElement.value;
+            const colors = colorMap[value] || colorMap['Hazırlanıyor'];
+
+            selectElement.style.backgroundColor = colors.bg;
+            selectElement.style.color = colors.color;
+        }
+
+        selects.forEach(select => {
+            // İlk yükleme sırasında rengi set et
+            updateSelectColor(select);
+
+            // Seçim değiştiğinde rengi güncelle
+            select.addEventListener('change', function () {
+                updateSelectColor(this);
+            });
+        });
+    });
+</script>
+
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Müşteriler | KOBİ Asistan{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h1>Müşteri Yönetimi</h1>
+        <p>Admin müşteri oluşturabilir, bilgilerini düzenleyebilir ve gerekirse müşteriye giriş hesabı tanımlayabilir.
+        </p>
+    </div>
+</div>
+
+<!--
+<section class="panel">
+    <h2>Yeni Müşteri Ekle</h2>
+    <form class="form-grid" action="/customers/add" method="post">
+        <input type="text" name="ad_soyad" placeholder="Ad Soyad" required>
+        <input type="text" name="telefon" placeholder="Telefon" required>
+        <input type="email" name="email" placeholder="Email">
+        <input type="password" name="password" placeholder="Giriş şifresi. Boşsa sadece müşteri kaydı açılır.">
+        <input class="wide" type="text" name="adres" placeholder="Adres">
+        <button class="btn-primary" type="submit">Müşteri Ekle</button>
+    </form>
+</section>
+-->
+
+<section class="panel">
+    <h2>Müşteri Listesi</h2>
+    {% if musteriler %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Hesap</th>
+                <th>Ad Soyad</th>
+                <th>Telefon</th>
+                <th>Email</th>
+                <th>Adres</th>
+                <!-- <th>Yeni Şifre</th> -->
+                <th>Güncelle</th>
+                <th>Sil</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for musteri in musteriler %}
+            <tr>
+                <form action="/customers/update" method="post">
+                    <td>#{{ musteri["id"] }}</td>
+                    <td>{% if musteri["user_id"] %}Aktif{% else %}Hesap yok{% endif %}</td>
+                    <td><input type="text" name="ad_soyad" value="{{ musteri['ad_soyad'] }}" required></td>
+                    <td><input type="text" name="telefon" value="{{ musteri['telefon'] }}" required></td>
+                    <td><input type="email" name="email" value="{{ musteri['email'] }}"></td>
+                    <td><input type="text" name="adres" value="{{ musteri['adres'] }}"></td>
+                    <!-- <td><input type="password" name="password" placeholder="Boş bırak: değişmesin"></td> -->
+                    <td>
+                        <input type="hidden" name="customer_id" value="{{ musteri['id'] }}">
+                        <button class="btn-primary small" type="submit">Kaydet</button>
+                    </td>
+                </form>
+                <td>
+                    <form action="/customers/delete" method="post">
+                        <input type="hidden" name="customer_id" value="{{ musteri['id'] }}">
+                        <button class="btn-danger small" type="submit">Sil</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty">Henüz müşteri kaydı yok.</p>
+    {% endif %}
+</section>
+{% endblock %}

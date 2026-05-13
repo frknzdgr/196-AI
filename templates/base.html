@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}KOBİ Asistan{% endblock %}</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-icon">KA</div>
+            <div>
+                <h2>KOBİ Asistan</h2>
+                <p>Admin operasyon merkezi</p>
+            </div>
+        </div>
+
+        <nav class="menu">
+            <a href="/dashboard" class="{% if active_page == 'dashboard' %}active{% endif %}">
+                <span class="menu-icon">📊</span><span>Dashboard</span>
+            </a>
+            <a href="/products" class="{% if active_page == 'products' %}active{% endif %}">
+                <span class="menu-icon">📦</span><span>Ürünler</span>
+            </a>
+            <a href="/orders" class="{% if active_page == 'orders' %}active{% endif %}">
+                <span class="menu-icon">🧾</span><span>Siparişler</span>
+            </a>
+            <a href="/customers" class="{% if active_page == 'customers' %}active{% endif %}">
+                <span class="menu-icon">👥</span><span>Müşteriler</span>
+            </a>
+            <a href="/assistant" class="{% if active_page == 'assistant' %}active{% endif %}">
+                <span class="menu-icon">🤖</span><span>AI Asistan</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-card">
+            <div class="pulse-dot"></div>
+            <div>
+                <strong>Admin aktif</strong>
+                <p>Ürün, stok, müşteri ve sipariş operasyonları yönetiliyor.</p>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <div>
+                <span class="eyebrow">Yönetim Paneli</span>
+                <h1>{% block page_name %}Kontrol Paneli{% endblock %}</h1>
+            </div>
+            <div class="topbar-actions">
+                <span class="status-pill"><span></span>Güvenli oturum</span>
+                <a class="btn-secondary" href="/logout">Çıkış Yap</a>
+            </div>
+        </header>
+        {% block content %}{% endblock %}
+    </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,472 @@
+{% extends "customer_base.html" %}
+{% block title %}Ürünler | KOBİ Market{% endblock %}
+
+{% block content %}
+<section class="store-hero">
+    <div>
+        <span class="eyebrow">Müşteri Paneli</span>
+        <h1>Hoş geldin, {{ customer["ad_soyad"] }}</h1>
+        <p>Ürünleri incele, sepete ekle ve sağdaki sepet panelini kullanarak siparişini oluştur.</p>
+        <div class="store-hero-actions">
+            <button type="button" class="btn-secondary" id="cart-toggle-button">Sepetim (<span
+                    id="dashboard-cart-count">0</span>)</button>
+            <a class="btn-secondary" href="#products">Ürünlere Git</a>
+        </div>
+    </div>
+    <div class="store-summary-card">
+        <div>
+            <span>Toplam Sipariş</span>
+            <strong>{{ siparis_sayisi }}</strong>
+        </div>
+        <div>
+            <span>Aktif Sipariş</span>
+            <strong>{{ aktif_siparis }}</strong>
+        </div>
+        <div>
+            <span>Telefon</span>
+            <strong>{{ customer["telefon"] }}</strong>
+        </div>
+    </div>
+</section>
+
+
+<section id="products" class="store-section">
+    <div class="section-title-row">
+        <div>
+            <h2>Ürünler</h2>
+            <p>Adet seçip sepete ekleyebilirsin. Sepet sayfasından siparişini tamamla.</p>
+        </div>
+    </div>
+
+    {% if urunler %}
+    <div class="shop-grid">
+        {% for urun in urunler %}
+        <article class="shop-card">
+            <div class="shop-image">
+                {% if urun["image_path"] %}
+                <img src="{{ '/static/' ~ urun['image_path'] }}" alt="{{ urun['ad'] }}">
+                {% else %}
+                {{ urun["ad"][0] }}
+                {% endif %}
+            </div>
+            <div class="shop-card-body">
+                <div class="product-topline">
+                    <span class="badge">{{ urun["kategori"] }}</span>
+                    <strong>{{ urun["fiyat"] }} TL</strong>
+                </div>
+                <h3>{{ urun["ad"] }}</h3>
+                <p>{{ urun["aciklama"] or "Bu ürün için açıklama yakında eklenecek." }}</p>
+                <div class="stock-line">
+                    <span>Stokta</span>
+                    <b>{{ urun["stok"] }} adet</b>
+                </div>
+                <div class="quick-order-form">
+                    <input type="number" class="quantity-input" min="1" max="{{ urun['stok'] }}" value="1"
+                        aria-label="Adet">
+                    <button type="button" class="btn-primary add-to-cart-btn" data-urun-id="{{ urun['id'] }}"
+                        data-urun-name="{{ urun['ad'] }}" data-urun-price="{{ urun['fiyat'] }}"
+                        data-urun-stock="{{ urun['stok'] }}">Sepete Ekle</button>
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <strong>Şu anda stokta ürün yok.</strong>
+        <p>Ürünler eklendiğinde burada listelenecek.</p>
+    </div>
+    {% endif %}
+</section>
+
+{% if son_siparisler %}
+<section class="store-section">
+    <div class="section-title-row">
+        <div>
+            <h2>Son Siparişlerin</h2>
+            <p>Admin durum güncellediğinde burada anında yeni durum görünür.</p>
+        </div>
+        <a href="/customer/orders">Tümünü gör</a>
+    </div>
+
+    <div class="order-card-grid compact">
+        {% for siparis in son_siparisler %}
+        <article class="order-status-card">
+            <div class="order-card-head">
+                <strong>#{{ siparis["id"] }}</strong>
+                <span class="status-badge status-{{ siparis['durum']|replace(' ', '-') }}">{{ siparis["durum"] }}</span>
+            </div>
+            <p>{{ siparis["urunler_listesi"] }}</p>
+            <div class="order-card-foot">
+                <span>{{ siparis["toplam_tutar"] }} TL</span>
+                <small>{{ siparis["tarih"] }}</small>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<aside class="cart-drawer dashboard" id="dashboard-cart-drawer">
+    <div class="cart-header">
+        <div>
+            <h2>Sepet</h2>
+            <p class="muted-text">Ürünleri burada görebilir, istediğin zaman açıp kapatabilirsin.</p>
+        </div>
+        <button type="button" class="close-cart-btn" id="close-cart-button" aria-label="Sepeti kapat">×</button>
+    </div>
+    <div id="dashboard-cart-items" class="cart-items empty">
+        <p class="cart-empty">Sepet boş. Ürünleri ekleyerek sipariş oluşturabilirsin.</p>
+    </div>
+    <div class="cart-summary">
+        <div class="summary-row">
+            <span>Toplam</span>
+            <strong id="dashboard-cart-total">0 TL</strong>
+        </div>
+
+        <button type="button" class="btn-primary wide" id="dashboard-checkout-button" disabled
+            onclick="openCheckoutModal()">Siparişi Oluştur</button>
+    </div>
+    <form id="dashboard-checkout-form" action="/customer/orders/add" method="post" style="display:none;">
+        <input type="hidden" name="cart_items" id="dashboard-cart-items-input">
+        <input type="hidden" name="teslimat_adresi" id="dashboard-address-input">
+        <input type="hidden" name="odeme_tipi" id="dashboard-payment-type-input">
+        <input type="hidden" name="kart_numarasi" id="dashboard-card-number-input">
+        <input type="hidden" name="kart_son_kullanma" id="dashboard-card-expiry-input">
+        <input type="hidden" name="kart_cvv" id="dashboard-card-cvv-input">
+        <input type="hidden" name="toplam_tutar" id="dashboard-total-input">
+    </form>
+</aside>
+
+<!-- Checkout Modal -->
+<div id="checkout-modal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Sipariş Onayı</h3>
+            <button type="button" class="close-modal-btn" id="close-checkout-modal">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="checkout-summary">
+                <h4>Sepet Özeti</h4>
+                <div id="modal-cart-items"></div>
+                <div class="summary-row">
+                    <span>Ara Toplam</span>
+                    <strong id="modal-subtotal">0 TL</strong>
+                </div>
+                <div class="summary-row" id="delivery-fee-row" style="display:none;">
+                    <span>Kapıda Ödeme Ücreti</span>
+                    <strong>+20 TL</strong>
+                </div>
+                <div class="summary-row total-row">
+                    <span>Toplam</span>
+                    <strong id="modal-total">0 TL</strong>
+                </div>
+            </div>
+
+            <label class="field-label" for="modal-address">Teslimat Adresi</label>
+            <textarea id="modal-address" class="wide" placeholder="Teslimat adresini giriniz" required></textarea>
+
+            <label class="field-label" for="modal-payment-type">Ödeme Tipi</label>
+            <select id="modal-payment-type" class="wide" required>
+                <option value="">Seçiniz</option>
+                <option value="kapida">Kapıda Ödeme (+20 TL)</option>
+                <option value="kredi_karti">Kredi Kartı</option>
+            </select>
+
+            <div id="card-details" style="display:none;">
+                <label class="field-label" for="card-number">Kart Numarası</label>
+                <input type="text" id="card-number" placeholder="1234 5678 9012 3456" maxlength="19"
+                    inputmode="numeric">
+                <div class="form-row">
+                    <div>
+                        <label class="field-label" for="card-expiry">Son Kullanma Tarihi</label>
+                        <input type="text" id="card-expiry" placeholder="MM/YY" maxlength="5" inputmode="numeric">
+                    </div>
+                    <div>
+                        <label class="field-label" for="card-cvv">CVV</label>
+                        <input type="text" id="card-cvv" placeholder="123" maxlength="3" inputmode="numeric">
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="btn-primary wide" id="confirm-checkout-button">Siparişi Onayla</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const cartKey = "customerDashboardCart";
+    const savedAddress = {{ customer['adres'] | tojson }} || "";
+    const cart = JSON.parse(localStorage.getItem(cartKey) || "[]");
+    const cartDrawer = document.getElementById("dashboard-cart-drawer");
+    const cartToggleButton = document.getElementById("cart-toggle-button");
+    const closeCartButton = document.getElementById("close-cart-button");
+    const cartCountEl = document.getElementById("dashboard-cart-count");
+    const globalCartCountEl = document.getElementById("global-cart-count");
+    const globalCartButton = document.getElementById("global-cart-button");
+    const cartItemsEl = document.getElementById("dashboard-cart-items");
+    const cartTotalEl = document.getElementById("dashboard-cart-total");
+    const checkoutForm = document.getElementById("dashboard-checkout-form");
+    const cartItemsInput = document.getElementById("dashboard-cart-items-input");
+    const addressInput = document.getElementById("dashboard-address-input");
+
+    function saveCart() {
+        localStorage.setItem(cartKey, JSON.stringify(cart));
+    }
+
+    function toggleCartDrawer(open) {
+        cartDrawer.classList.toggle("open", open);
+    }
+
+    function updateCartSummary() {
+        const totalQuantity = cart.reduce((sum, item) => sum + item.adet, 0);
+        const totalPrice = cart.reduce((sum, item) => sum + item.adet * item.fiyat, 0);
+        cartCountEl.textContent = totalQuantity;
+        cartTotalEl.textContent = `${totalPrice.toFixed(2).replace(/\.00$/, "")} TL`;
+        if (globalCartCountEl) {
+            globalCartCountEl.textContent = totalQuantity;
+        }
+        const checkoutButton = document.getElementById("dashboard-checkout-button");
+        if (checkoutButton) {
+            if (totalQuantity === 0) {
+                checkoutButton.setAttribute('disabled', 'true');
+            } else {
+                checkoutButton.removeAttribute('disabled');
+            }
+        }
+    }
+
+    function renderCart() {
+        cartItemsEl.innerHTML = "";
+        if (!cart.length) {
+            cartItemsEl.classList.add("empty");
+            cartItemsEl.innerHTML = `<p class="cart-empty">Sepet boş. Ürünleri ekleyerek sipariş oluşturabilirsin.</p>`;
+            updateCartSummary();
+            return;
+        }
+        cartItemsEl.classList.remove("empty");
+        cart.forEach(item => {
+            const row = document.createElement("div");
+            row.className = "cart-item";
+            row.innerHTML = `
+                <div>
+                    <strong>${item.ad}</strong>
+                    <p class="muted-text">${item.adet} x ${item.fiyat} TL</p>
+                </div>
+                <button type="button" class="remove-item" data-urun-id="${item.urun_id}">Kaldır</button>
+            `;
+            cartItemsEl.appendChild(row);
+        });
+        cartItemsEl.querySelectorAll(".remove-item").forEach(button => {
+            button.addEventListener("click", () => {
+                const id = Number(button.dataset.urunId);
+                const index = cart.findIndex(item => item.urun_id === id);
+                if (index !== -1) {
+                    cart.splice(index, 1);
+                    saveCart();
+                    renderCart();
+                }
+            });
+        });
+        updateCartSummary();
+    }
+
+    function addToCart(urunId, ad, fiyat, adet, stok) {
+        const existing = cart.find(item => item.urun_id === urunId);
+        if (existing) {
+            existing.adet = Math.min(existing.adet + adet, stok);
+        } else {
+            cart.push({ urun_id: urunId, ad, fiyat, adet, stok });
+        }
+        saveCart();
+        renderCart();
+        toggleCartDrawer(true);
+    }
+
+    document.querySelectorAll(".add-to-cart-btn").forEach(button => {
+        button.addEventListener("click", () => {
+            const urunId = Number(button.dataset.urunId);
+            const ad = button.dataset.urunName;
+            const fiyat = Number(button.dataset.urunPrice);
+            const stok = Number(button.dataset.urunStock);
+            const qtyInput = button.closest(".quick-order-form").querySelector(".quantity-input");
+            const adet = Math.max(1, Math.min(Number(qtyInput.value) || 1, stok));
+            if (adet <= 0) {
+                return;
+            }
+            addToCart(urunId, ad, fiyat, adet, stok);
+        });
+    });
+
+    cartToggleButton.addEventListener("click", () => {
+        cartDrawer.classList.toggle("open");
+    });
+    if (globalCartButton) {
+        globalCartButton.addEventListener("click", () => {
+            toggleCartDrawer(true);
+        });
+    }
+    closeCartButton.addEventListener("click", () => toggleCartDrawer(false));
+
+    renderCart();
+
+    // Checkout Modal Functions
+    const checkoutModal = document.getElementById("checkout-modal");
+    const closeModalBtn = document.getElementById("close-checkout-modal");
+    const modalAddress = document.getElementById("modal-address");
+    const modalPaymentType = document.getElementById("modal-payment-type");
+    const cardDetails = document.getElementById("card-details");
+    const confirmCheckoutBtn = document.getElementById("confirm-checkout-button");
+    const modalCartItems = document.getElementById("modal-cart-items");
+    const modalSubtotal = document.getElementById("modal-subtotal");
+    const modalTotal = document.getElementById("modal-total");
+    const deliveryFeeRow = document.getElementById("delivery-fee-row");
+
+    window.openCheckoutModal = openCheckoutModal;
+
+    function openCheckoutModal() {
+        // Populate modal with cart data
+        modalCartItems.innerHTML = "";
+        let subtotal = 0;
+        cart.forEach(item => {
+            subtotal += item.adet * item.fiyat;
+            const itemEl = document.createElement("div");
+            itemEl.className = "cart-item";
+            itemEl.innerHTML = `<strong>${item.ad}</strong> <span>${item.adet} x ${item.fiyat} TL</span>`;
+            modalCartItems.appendChild(itemEl);
+        });
+        modalSubtotal.textContent = `${subtotal.toFixed(2).replace(/\.00$/, "")} TL`;
+        updateModalTotal();
+
+        // Set address
+        modalAddress.value = savedAddress || "";
+
+        // Reset payment type
+        modalPaymentType.value = "";
+        cardDetails.style.display = "none";
+
+        // Show modal
+        checkoutModal.style.display = "flex";
+    }
+
+    function updateModalTotal() {
+        const subtotal = parseFloat(modalSubtotal.textContent.replace(" TL", "").replace(",", "."));
+        const deliveryFee = modalPaymentType.value === "kapida" ? 20 : 0;
+        const total = subtotal + deliveryFee;
+        modalTotal.textContent = `${total.toFixed(2).replace(/\.00$/, "")} TL`;
+        deliveryFeeRow.style.display = deliveryFee > 0 ? "flex" : "none";
+    }
+
+    modalPaymentType.addEventListener("change", () => {
+        cardDetails.style.display = modalPaymentType.value === "kredi_karti" ? "block" : "none";
+        updateModalTotal();
+    });
+
+    closeModalBtn.addEventListener("click", () => {
+        checkoutModal.style.display = "none";
+    });
+
+    confirmCheckoutBtn.addEventListener("click", () => {
+        const address = modalAddress.value.trim();
+        const paymentType = modalPaymentType.value;
+        if (!address) {
+            alert("Lütfen teslimat adresini girin.");
+            modalAddress.focus();
+            return;
+        }
+        if (!paymentType) {
+            alert("Lütfen ödeme tipini seçin.");
+            modalPaymentType.focus();
+            return;
+        }
+        if (paymentType === "kredi_karti") {
+            const cardNumber = document.getElementById("card-number").value.trim();
+            const cardExpiry = document.getElementById("card-expiry").value.trim();
+            const cardCvv = document.getElementById("card-cvv").value.trim();
+            if (!cardNumber || !cardExpiry || !cardCvv) {
+                alert("Lütfen kart bilgilerini doldurun.");
+                return;
+            }
+            // Basic validation
+            if (cardNumber.replace(/\s/g, "").length < 13) {
+                alert("Geçersiz kart numarası.");
+                return;
+            }
+            if (!/^\d{2}\/\d{2}$/.test(cardExpiry)) {
+                alert("Geçersiz son kullanma tarihi (MM/YY).");
+                return;
+            }
+            if (cardCvv.length < 3) {
+                alert("Geçersiz CVV.");
+                return;
+            }
+            document.getElementById("dashboard-card-number-input").value = cardNumber;
+            document.getElementById("dashboard-card-expiry-input").value = cardExpiry;
+            document.getElementById("dashboard-card-cvv-input").value = cardCvv;
+        }
+
+        document.getElementById("dashboard-cart-items-input").value = JSON.stringify(cart);
+        document.getElementById("dashboard-address-input").value = address;
+        document.getElementById("dashboard-payment-type-input").value = paymentType;
+        document.getElementById("dashboard-total-input").value = modalTotal.textContent.replace(" TL", "");
+
+        // Clear cart locally once the order is submitted so the drawer does not keep showing old items.
+        cart.length = 0;
+        localStorage.removeItem(cartKey);
+        renderCart();
+
+        checkoutModal.style.display = "none";
+        checkoutForm.submit();
+    });
+
+    // Seçicileri netleştirelim
+    const cardInput = document.getElementById('card-number');
+    const expiryInput = document.getElementById('card-expiry');
+    const cvvInput = document.getElementById('card-cvv');
+
+    // 1. KART NUMARASI: Sayı zorunlu, 4'te bir boşluk
+    cardInput.addEventListener('input', (e) => {
+        // Sayı dışındaki her şeyi anında sil
+        let value = e.target.value.replace(/\D/g, '');
+
+        // 16 hane ile sınırla (boşluklar hariç)
+        value = value.substring(0, 16);
+
+        // 4'erli gruplara ayırıp araya boşluk koy
+        let matches = value.match(/\d{1,4}/g);
+        if (matches) {
+            e.target.value = matches.join(' ');
+        } else {
+            e.target.value = value;
+        }
+    });
+
+    // 2. SON KULLANMA: Sayı zorunlu, 2'de bir "/"
+    expiryInput.addEventListener('input', (e) => {
+        let value = e.target.value.replace(/\D/g, '');
+
+        // İlk iki hane Ay (01-12 arası kontrolü)
+        if (value.length >= 2) {
+            let month = parseInt(value.substring(0, 2));
+            if (month > 12) value = '12' + value.substring(2);
+            if (month === 0) value = '01' + value.substring(2);
+
+            e.target.value = value.substring(0, 2) + '/' + value.substring(2, 4);
+        } else {
+            e.target.value = value;
+        }
+    });
+
+    // Silme (Backspace) yaparken "/" işaretine takılmaması için
+    expiryInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && expiryInput.value.length === 3) {
+            expiryInput.value = expiryInput.value.substring(0, 2);
+        }
+    });
+
+    // 3. CVV: Sadece sayı ve max 3 hane
+    cvvInput.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/\D/g, '').substring(0, 3);
+    });
+</script>
+{% endblock %}

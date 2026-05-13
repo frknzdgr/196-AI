@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Ürünler | KOBİ Asistan{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h1>Ürün Yönetimi</h1>
+        <p>Ürün ekleyebilir, fiyat ve stok bilgilerini güncelleyebilirsin.</p>
+    </div>
+</div>
+
+<section class="panel">
+    <h2>Yeni Ürün Ekle</h2>
+
+    <form class="form-grid" action="/products/add" method="post" enctype="multipart/form-data">
+        <input type="text" name="ad" placeholder="Ürün adı" required>
+        <input type="text" name="kategori" placeholder="Kategori" required>
+        <input type="number" name="stok" placeholder="Stok" required>
+        <input type="number" step="0.01" name="fiyat" placeholder="Fiyat" required>
+        <input class="wide" type="text" name="aciklama" placeholder="Açıklama">
+        <input type="file" name="image" accept="image/*">
+        <button class="btn-primary" type="submit">Ürün Ekle</button>
+    </form>
+</section>
+
+<section class="panel">
+    <div class="panel-header">
+        <h2>Ürün Listesi</h2>
+        <form action="/seed" method="post">
+            <button class="btn-secondary" type="submit">Örnek ürünleri yükle</button>
+        </form>
+    </div>
+
+    {% if urunler %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Ürün</th>
+                <th>Kategori</th>
+                <th>Stok</th>
+                <th>Fiyat</th>
+                <th>Açıklama</th>
+                <th>Resim</th>
+                <th>Güncelle</th>
+                <th>Sil</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for urun in urunler %}
+            <tr>
+                <form action="/products/update" method="post" enctype="multipart/form-data">
+                    <td>#{{ urun["id"] }}</td>
+
+                    <td>
+                        <input type="text" name="ad" value="{{ urun['ad'] }}" required>
+                    </td>
+
+                    <td>
+                        <input type="text" name="kategori" value="{{ urun['kategori'] }}" required>
+                    </td>
+
+                    <td>
+                        <input type="number" name="stok" value="{{ urun['stok'] }}" required>
+                    </td>
+
+                    <td>
+                        <input type="number" step="0.01" name="fiyat" value="{{ urun['fiyat'] }}" required>
+                    </td>
+
+                    <td>
+                        <input type="text" name="aciklama" value="{{ urun['aciklama'] }}">
+                    </td>
+
+                    <td class="product-image-cell">
+                        {% if urun["image_path"] %}
+                        <img src="{{ '/static/' ~ urun['image_path'] }}" alt="{{ urun['ad'] }}" />
+                        {% else %}
+                        <div class="product-image-placeholder">Görsel yok</div>
+                        {% endif %}
+                        <input type="file" name="image" accept="image/*">
+                    </td>
+
+                    <td>
+                        <input type="hidden" name="product_id" value="{{ urun['id'] }}">
+                        <button class="btn-primary small" type="submit">Kaydet</button>
+                    </td>
+                </form>
+
+                <td>
+                    <form action="/products/delete" method="post">
+                        <input type="hidden" name="product_id" value="{{ urun['id'] }}">
+                        <button class="btn-danger small" type="submit">Sil</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty">Henüz ürün yok. Ürün ekleyebilir veya örnek ürünleri yükleyebilirsin.</p>
+    {% endif %}
+</section>
+
+<div id="image-preview-modal" class="image-preview-modal" aria-hidden="true">
+    <div class="image-preview-modal-backdrop"></div>
+    <div class="image-preview-modal-content">
+        <button type="button" class="image-preview-close" id="close-image-preview">×</button>
+        <h3>Görsel Önizleme</h3>
+        <div class="image-preview-box">
+            <img id="image-preview-sample" src="" alt="Ürün önizleme">
+        </div>
+        <p>Bu görsel sistemde aynı boyutta gösterilecek. Yatay veya dikey fark etmeksizin kırpma yapılır.</p>
+    </div>
+</div>
+
+<script>
+    const imageInputs = document.querySelectorAll('input[type="file"][name="image"]');
+    const previewModal = document.getElementById('image-preview-modal');
+    const previewImage = document.getElementById('image-preview-sample');
+    const closePreview = document.getElementById('close-image-preview');
+
+    function openImagePreview(src) {
+        previewImage.src = src;
+        previewModal.style.display = 'block';
+        previewModal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeImagePreview() {
+        previewModal.style.display = 'none';
+        previewModal.setAttribute('aria-hidden', 'true');
+        previewImage.src = '';
+    }
+
+    imageInputs.forEach(input => {
+        input.addEventListener('change', event => {
+            const file = event.target.files && event.target.files[0];
+            if (!file) {
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = () => openImagePreview(reader.result);
+            reader.readAsDataURL(file);
+        });
+    });
+
+    closePreview.addEventListener('click', closeImagePreview);
+    previewModal.querySelector('.image-preview-modal-backdrop').addEventListener('click', closeImagePreview);
+</script>
+
+{% endblock %}

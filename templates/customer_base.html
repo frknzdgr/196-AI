@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Müşteri Paneli | KOBİ Asistan{% endblock %}</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="store-shell">
+        <header class="store-header">
+            <a class="store-brand" href="/customer/dashboard">
+                <span>KA</span>
+                <div>
+                    <strong>KOBİ Market</strong>
+                    <small>Müşteri alışveriş paneli</small>
+                </div>
+            </a>
+
+            <nav class="store-nav">
+                <a href="/customer/dashboard"
+                    class="{% if active_page == 'customer_dashboard' %}active{% endif %}">Ürünler</a>
+                <a href="/customer/orders"
+                    class="{% if active_page == 'customer_orders' %}active{% endif %}">Siparişlerim</a>
+                <a href="/customer/profile"
+                    class="{% if active_page == 'customer_profile' %}active{% endif %}">Profilim</a>
+                <a href="/logout">Çıkış</a>
+            </nav>
+            <div class="store-actions">
+                {% if active_page == 'customer_dashboard' %}
+                <button id="global-cart-button" type="button" class="icon-button" aria-label="Sepet">
+                    <span>🛒</span>
+                    <span id="global-cart-count" class="cart-icon-badge">0</span>
+                </button>
+                {% endif %}
+            </div>
+        </header>
+
+        <main class="store-main">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</body>
+
+</html>

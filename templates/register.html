@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Müşteri Kayıt | KOBİ Asistan</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body class="auth-body">
+    <div class="auth-wrap single">
+        <div class="auth-card wide-auth">
+            <h2>Müşteri Kayıt</h2>
+            <p class="muted-text">Kayıt olduktan sonra ürünleri görebilir, sipariş oluşturabilir ve sipariş durumunu
+                takip edebilirsin.</p>
+            {% if error %}<div class="alert-error">{{ error }}</div>{% endif %}
+
+            <form method="post" action="/register" class="auth-form">
+                <label>Ad Soyad</label>
+                <input type="text" name="ad_soyad" autocomplete="name" required>
+
+                <label>Telefon</label>
+<input type="text" 
+       id="user-phone" 
+       name="telefon" 
+       placeholder="5551234567" 
+       autocomplete="tel" 
+       maxlength="10" 
+       minlength="10" 
+       inputmode="numeric" 
+       required>
+
+                <label>Email</label>
+                <input type="email" name="email" placeholder="ornek@mail.com" autocomplete="email">
+
+                <label>Şifre</label>
+                <input type="password" name="password" minlength="6" autocomplete="new-password" required>
+
+                <button class="btn-primary" type="submit">Kayıt Ol</button>
+                <a class="auth-link" href="/login">Zaten hesabım var</a>
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const phoneInput = document.getElementById('user-phone');
+
+        phoneInput.addEventListener('input', function (e) {
+            // Sadece rakamları al
+            let value = e.target.value.replace(/\D/g, '');
+
+            // İlk rakam girildiyse ve 5 değilse sil
+            if (value.length > 0 && value[0] !== '5') {
+                value = '';
+            }
+
+            // Maksimum 10 karakter sınırını koru
+            e.target.value = value.substring(0, 10);
+        });
+    });
+</script>
