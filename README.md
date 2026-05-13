@@ -48,7 +48,11 @@ Bu proje, yönetici ve müşteri deneyimini ayrı katmanlarda sunar:
    - `ai_service.py` ile yerel veritabanı bağlamı oluşturulur
    - Yönetici komutları ve müşteri mesajları AI asistanına yönlendirilir
 
-> **Şema yerleştirme alanı:** Buraya daha sonra mimari diyagram ekleyebilirsiniz.
+Aşağıdaki diyagram, sistemin istemci (client) isteklerini nasıl karşıladığını, veritabanı işlemlerini ve yapay zeka servisi (Gemini API) ile olan veri trafiğini özetlemektedir:
+
+![KOBİ Asistan Sistem Mimarisi](assets/mimari-sema.jpeg)
+
+---
 
 ---
 
@@ -69,8 +73,6 @@ Aşağıdaki adımlarla proje yerel ortamda çalışır hale gelir:
 
 1. Proje klasörüne gidin:
 
-  
-
 2. Sanal ortam oluşturun ve etkinleştirin:
 
    ```powershell
@@ -84,7 +86,6 @@ Aşağıdaki adımlarla proje yerel ortamda çalışır hale gelir:
    pip install -r requirements.txt
    ```
 
-
 4. Sunucuyu başlatın:
 
    ```powershell
@@ -93,7 +94,6 @@ Aşağıdaki adımlarla proje yerel ortamda çalışır hale gelir:
 
 5. Tarayıcıda açın:
    - `http://127.0.0.1:8000`
-  
 
 ---
 
